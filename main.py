@@ -1,12 +1,16 @@
 import pygame
 
 from utils import Color
-from chesspiece import ChessPiece, Rook
+from chesspiece import ChessPiece, Chariot, Horse, Elephant
 
 # Window's Configuration
-WIN_WIDTH = WIN_HEIGHT = 600  # height and width of window
-WIN = pygame.display.set_mode((WIN_WIDTH, WIN_WIDTH))  # initilize win form
+WIN_WIDTH = 900  # height and width of window
+WIN_HEIGHT = 600
+WIN = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGHT))  # initilize win form
 pygame.display.set_caption("LINE 98")  # win caption
+
+RED_TURN = 1
+GREEN_TURN = 0
 
 
 class BoardGame:
@@ -15,8 +19,8 @@ class BoardGame:
         self.rows = 9
         self.cols = 8
 
-        self.gap = 40
-        self.border = 15
+        self.gap = 50
+        self.border = 20
 
         self.width = self.cols * self.gap
         self.height = self.rows * self.gap
@@ -34,13 +38,25 @@ class BoardGame:
         self.makeGrid()
 
     def makeGrid(self):
-        rook = Rook(centrePoint=self.getCoordinateFromPosition((9, 0)), position=(9, 0))
-        c2 = Rook(centrePoint=self.getCoordinateFromPosition((2, 7)), position=(2, 7))
+        rook = Chariot(
+            centrePoint=self.getCoordinateFromPosition((9, 0)), position=(9, 0)
+        )
+        h1 = Horse(centrePoint=self.getCoordinateFromPosition((9, 1)), position=(9, 1))
+        e1 = Elephant(
+            centrePoint=self.getCoordinateFromPosition((9, 6)), position=(9, 6)
+        )
+        c2 = Chariot(
+            centrePoint=self.getCoordinateFromPosition((2, 7)), position=(2, 7)
+        )
 
         self.activePices.append(rook)
+        self.activePices.append(h1)
+        self.activePices.append(e1)
         self.activePices.append(c2)
 
         self.grid[9][0] = True
+        self.grid[9][1] = True
+        self.grid[9][6] = True
         self.grid[2][7] = True
 
     def drawGrid(self):
@@ -129,7 +145,7 @@ class BoardGame:
         """
 
         self.x = (WIN_WIDTH - self.width) / 2
-        self.y = WIN_HEIGHT * 25 / 100
+        self.y = WIN_HEIGHT * 10 / 100
 
     def getCoordinateFromPosition(self, position=None):
         """
@@ -180,6 +196,9 @@ class BoardGame:
         """
         Moving the piece and update the board
         """
+
+        print(f"Moving {piece} to {newPos}")
+
         oldRow, oldCol = piece.position
         newRow, newCol = newPos
 
@@ -188,8 +207,6 @@ class BoardGame:
 
         newCentrePoint = self.getCoordinateFromPosition(newPos)
         piece.moveToNewSpot(centrePoint=newCentrePoint, position=newPos)
-
-        print(f"Moving {piece} to {newRow}, {newCol}")
 
 
 def draw(board):

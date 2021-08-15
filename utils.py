@@ -1,3 +1,6 @@
+import pygame
+
+
 class Color:
     RED = (255, 0, 0)
     GREEN = (0, 255, 0)
@@ -9,3 +12,9 @@ class Color:
     ORANGE = (255, 165, 0)
     GREY = (128, 128, 128)
     TURQUOISE = (64, 224, 208)
+
+
+class ChessImages:
+    RED_CHARIOT = pygame.image.load("./images/red-car.png")
+    RED_HORSE = pygame.image.load("./images/red-horse.png")
+    RED_ELEPHANT = pygame.image.load("./images/red-elephant.png")

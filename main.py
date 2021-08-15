@@ -21,11 +21,14 @@ class BoardGame:
         self.width = self.cols * self.gap
         self.height = self.rows * self.gap
 
+        # contains info of all postions in the board
         self.grid = [
             [False for _ in range(self.cols + 1)] for _ in range(self.rows + 1)
-        ]  # contains info of all postions in the board
-        self.activePices = []  # contains all active pieces all the board
-        self.movables = []  # contains all movable position
+        ]
+        # contains all active pieces all the board
+        self.activePices = []
+        # contains all movable positions
+        self.movables = []
 
         self.generatePosition()
         self.makeGrid()
@@ -115,7 +118,8 @@ class BoardGame:
         for piece in self.activePices:
             piece.draw(self.win)
 
-        for coor in self.movables:
+        for position in self.movables:
+            coor = self.getCoordinateFromPosition(position)
             pygame.draw.circle(self.win, Color.BLACK, coor, 5)
 
     def generatePosition(self):
@@ -151,12 +155,15 @@ class BoardGame:
         clickX, clickY = pos
 
         if clickX < self.x - self.border or clickX > self.x + self.width + self.border:
-            return False
+            return None
 
         if clickY < self.y - self.border or clickY > self.y + self.height + self.border:
-            return False
+            return None
 
-        return True
+        col = round((clickX - self.x) / self.gap)
+        row = round((clickY - self.y) / self.gap)
+
+        return (row, col)
 
     def chessPieceCheck(self, pos=None):
         if not pos:
@@ -169,13 +176,20 @@ class BoardGame:
 
         return None
 
-    def showMovables(self, movables):
-        if movables is None:
-            return
+    def movePiece(self, piece, newPos=(0, 0)):
+        """
+        Moving the piece and update the board
+        """
+        oldRow, oldCol = piece.position
+        newRow, newCol = newPos
 
-        for position in movables:
-            coor = self.getCoordinateFromPosition(position)
-            self.movables.append(coor)
+        self.grid[oldRow][oldCol] = False
+        self.grid[newRow][newCol] = True
+
+        newCentrePoint = self.getCoordinateFromPosition(newPos)
+        piece.moveToNewSpot(centrePoint=newCentrePoint, position=newPos)
+
+        print(f"Moving {piece} to {newRow}, {newCol}")
 
 
 def draw(board):
@@ -199,20 +213,30 @@ def main():
 
             pos = pygame.mouse.get_pos()
             if pygame.mouse.get_pressed()[0]:
-                if board.isClicked(pos):
+                boardPos = board.isClicked(pos)
+                if boardPos:
                     if not selectedPiece:  # if there is no piece that already selected
                         selectedPiece = board.chessPieceCheck(pos)
 
                         if selectedPiece:  # if there is a clicked piece
                             movables = selectedPiece.checkPossibleMove(board.grid)
-                            board.showMovables(movables)
-                    else:  # if there are selected piece
-
+                            board.movables = movables
+                    else:  # if there is a selected piece
                         # if selected piece is clicked again, unselect it
                         if selectedPiece.isClicked(pos):
                             selectedPiece.changeStatus(selected=False)
                             selectedPiece = None
                             board.movables = []
+                        # if another position is clicked
+                        else:
+                            # if piece can move to that position
+                            if boardPos in board.movables:
+                                board.movePiece(selectedPiece, boardPos)
+                                selectedPiece.changeStatus(selected=False)
+                                selectedPiece = None
+                                board.movables = []
+                            else:
+                                print(f"Cant move there {boardPos}")
 
 
 if __name__ == "__main__":

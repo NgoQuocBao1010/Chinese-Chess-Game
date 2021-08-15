@@ -53,6 +53,13 @@ class ChessPiece:
         print("This is not a real chesspiece")
         return None
 
+    def moveToNewSpot(self, centrePoint=None, position=None):
+        if not centrePoint:
+            return
+
+        self.centrePoint = centrePoint
+        self.position = position
+
 
 class Rook(ChessPiece):
     def __init__(self, centrePoint=(0, 0), position=(0, 0)):
@@ -77,5 +84,7 @@ class Rook(ChessPiece):
             if not occupied:
                 movables.append((row, colPos))
 
-        print(movables)
         return movables
+
+    def __str__(self):
+        return f"A Rook piece at {self.position}"

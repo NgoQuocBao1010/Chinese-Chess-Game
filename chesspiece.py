@@ -2,39 +2,41 @@ import pygame
 import numpy as np
 from pprint import pprint
 
-from utils import Color, ChessImages
+from utils import Color, ChessImages, Configuration
+
+RED_SIDE = Configuration.RED_SIDE
+BLUE_SIDE = Configuration.BLUE_SIDE
 
 
 class ChessPiece:
     NOT_SELECTED = 0
     SELECTED = 1
 
-    STATUS_COLOR = {
-        0: Color.GREEN,
-        1: Color.RED,
-    }
-
     NAME = "A chess piece"
-    IMAGE = None
 
-    def __init__(self, centrePoint=(0, 0), position=(0, 0)):
+    def __init__(self, centrePoint=(0, 0), position=(0, 0), side=RED_SIDE):
         self.position = position
         self.centrePoint = centrePoint
-        self.radius = 15
+        self.radius = 20
 
+        self.side = side
         self.status = self.NOT_SELECTED
         self.posibleMoves = []
+        self.image = None
 
     def draw(self, win):
         """
         Draw the piece
         """
-        color = self.STATUS_COLOR.get(self.status)
         pygame.draw.circle(win, Color.WHITE, self.centrePoint, self.radius)
+        
         x, y = self.centrePoint
 
-        if self.IMAGE:
-            win.blit(self.IMAGE, (x - self.radius, y - self.radius))
+        if self.status == self.SELECTED:
+            pygame.draw.rect(win, Color.GREEN, pygame.Rect(x - self.radius - 1, y - self.radius - 1, self.radius * 2 + 2, self.radius * 2 + 2), 2)
+
+        if self.image:
+            win.blit(self.image, (x - self.radius, y - self.radius))
 
     def isClicked(self, pos=None):
         """
@@ -67,8 +69,14 @@ class ChessPiece:
         self.centrePoint = centrePoint
         self.position = position
 
+    def isEnemy(self, other):
+        return True if other.side != self.side else False
+    
     def __str__(self):
         return f"A {self.NAME} at {self.position}"
+    
+    def __repr__(self):
+        return f"{self.NAME}"
 
 
 class Chariot(ChessPiece):
@@ -79,8 +87,9 @@ class Chariot(ChessPiece):
     NAME = "Chariot"
     IMAGE = ChessImages.RED_CHARIOT
 
-    def __init__(self, centrePoint=(0, 0), position=(0, 0)):
-        super().__init__(centrePoint, position)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.image = ChessImages.RED_CHARIOT if self.side == RED_SIDE else ChessImages.BLUE_CHARIOT
 
     def checkPossibleMove(self, boardGrid):
         movables = []
@@ -96,6 +105,9 @@ class Chariot(ChessPiece):
             if not column[r]:
                 movables.append((r, colPos))
             else:
+                otherPiece = column[r]
+                if self.isEnemy(otherPiece):
+                    movables.append((r, colPos))
                 break
 
         # Move down
@@ -103,6 +115,9 @@ class Chariot(ChessPiece):
             if not column[r]:
                 movables.append((r, colPos))
             else:
+                otherPiece = column[r]
+                if self.isEnemy(otherPiece):
+                    movables.append((r, colPos))
                 break
 
         row = boardGrid[rowPos]  # get the whole row
@@ -111,12 +126,19 @@ class Chariot(ChessPiece):
             if not row[c]:
                 movables.append((rowPos, c))
             else:
+                otherPiece = row[c]
+                if self.isEnemy(otherPiece):
+                    movables.append((rowPos, c))
                 break
+
         # Move right
         for c in range(colPos + 1, 9):
             if not row[c]:
                 movables.append((rowPos, c))
             else:
+                otherPiece = row[c]
+                if self.isEnemy(otherPiece):
+                    movables.append((rowPos, c))
                 break
 
         return movables
@@ -130,8 +152,9 @@ class Horse(ChessPiece):
     NAME = "Horse"
     IMAGE = ChessImages.RED_HORSE
 
-    def __init__(self, centrePoint=(0, 0), position=(0, 0)):
-        super().__init__(centrePoint, position)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.image = ChessImages.RED_HORSE if self.side == RED_SIDE else ChessImages.BLUE_HORSE
 
     def checkPossibleMove(self, boardGrid):
         movables = []
@@ -176,8 +199,13 @@ class Horse(ChessPiece):
             newCol = colPos + mY
 
             # Check if the move is valid
-            if 0 <= newRow <= 9 and 0 <= newCol <= 8 and not boardGrid[newRow, newCol]:
-                movables.append((newRow, newCol))
+            if 0 <= newRow <= 9 and 0 <= newCol <= 8:
+                if not boardGrid[newRow, newCol]:
+                    movables.append((newRow, newCol))
+                else:
+                    otherPiece = boardGrid[newRow, newCol]
+                    if self.isEnemy(otherPiece):
+                        movables.append((newRow, newCol))
 
         return movables
 
@@ -190,9 +218,10 @@ class Elephant(ChessPiece):
     NAME = "Elephant"
     IMAGE = ChessImages.RED_ELEPHANT
 
-    def __init__(self, centrePoint=(0, 0), position=(0, 0)):
-        super().__init__(centrePoint, position)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.moveLimit = (0, 4) if 0 <= self.position[0] <= 4 else (5, 9)
+        self.image = ChessImages.RED_ELEPHANT if self.side == RED_SIDE else ChessImages.BLUE_ELEPHANT
 
     def checkPossibleMove(self, boardGrid):
         movables = []
@@ -209,7 +238,12 @@ class Elephant(ChessPiece):
             and not boardGrid[rowPos - 1, colPos - 1]
         ):
             if rowPos - 2 >= upLimit and colPos - 2 >= 0:
-                movables.append((rowPos - 2, colPos - 2))
+                if not boardGrid[rowPos - 2, colPos - 2]:
+                    movables.append((rowPos - 2, colPos - 2))
+                else:
+                    otherPiece = boardGrid[rowPos - 2, colPos - 2]
+                    if self.isEnemy(otherPiece):
+                        movables.append((rowPos - 2, colPos - 2))
 
         # Move up right
         if (
@@ -218,7 +252,12 @@ class Elephant(ChessPiece):
             and not boardGrid[rowPos - 1, colPos + 1]
         ):
             if rowPos - 2 >= upLimit and colPos + 2 <= 8:
-                movables.append((rowPos - 2, colPos + 2))
+                if not boardGrid[rowPos - 2, colPos + 2]:
+                    movables.append((rowPos - 2, colPos + 2))
+                else:
+                    otherPiece = boardGrid[rowPos - 2, colPos + 2]
+                    if self.isEnemy(otherPiece):
+                        movables.append((rowPos - 2, colPos + 2))
 
         # Move down left
         if (
@@ -227,7 +266,12 @@ class Elephant(ChessPiece):
             and not boardGrid[rowPos + 1, colPos - 1]
         ):
             if rowPos + 2 >= upLimit and colPos - 2 >= 0:
-                movables.append((rowPos + 2, colPos - 2))
+                if not boardGrid[rowPos + 2, colPos - 2]:
+                    movables.append((rowPos + 2, colPos - 2))
+                else:
+                    otherPiece = boardGrid[rowPos + 2, colPos - 2]
+                    if self.isEnemy(otherPiece):
+                        movables.append((rowPos + 2, colPos - 2))
 
         # Move down right
         if (
@@ -236,6 +280,11 @@ class Elephant(ChessPiece):
             and not boardGrid[rowPos + 1, colPos + 1]
         ):
             if rowPos + 2 >= upLimit and colPos + 2 <= 8:
-                movables.append((rowPos + 2, colPos + 2))
+                if not boardGrid[rowPos + 2, colPos + 2]:
+                    movables.append((rowPos + 2, colPos + 2))
+                else:
+                    otherPiece = boardGrid[rowPos + 2, colPos + 2]
+                    if self.isEnemy(otherPiece):
+                        movables.append((rowPos + 2, colPos + 2))
 
         return movables

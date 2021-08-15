@@ -1,5 +1,13 @@
 import pygame
 
+class Configuration:
+    # Width and height of the application
+    WIN_WIDTH = 900
+    WIN_HEIGHT = 600
+
+    # Red side, blue side indicator
+    RED_SIDE = 1
+    BLUE_SIDE = 0
 
 class Color:
     RED = (255, 0, 0)
@@ -18,3 +26,7 @@ class ChessImages:
     RED_CHARIOT = pygame.image.load("./images/red-car.png")
     RED_HORSE = pygame.image.load("./images/red-horse.png")
     RED_ELEPHANT = pygame.image.load("./images/red-elephant.png")
+
+    BLUE_CHARIOT = pygame.image.load("./images/blue-car.png")
+    BLUE_HORSE = pygame.image.load("./images/blue-horse.png")
+    BLUE_ELEPHANT = pygame.image.load("./images/blue-elephant.png")

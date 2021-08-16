@@ -10,7 +10,7 @@ WIN_HEIGHT = Configuration.WIN_HEIGHT
 WIN = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGHT))  # initilize win form
 pygame.display.set_caption("LINE 98")  # win caption
 pygame.font.init()
-myfont = pygame.font.SysFont('Comic Sans MS', 30)
+myfont = pygame.font.SysFont('Comic Sans MS', 15)
 
 RED_TURN = Configuration.RED_SIDE
 GREEN_TURN = Configuration.BLUE_SIDE
@@ -48,14 +48,13 @@ def main():
 
             pos = pygame.mouse.get_pos()
             if pygame.mouse.get_pressed()[0]:
-                boardPos = board.isClicked(pos)
+                boardPos = board.isClicked(pos)  # check if user clicked on any position on the board
                 if boardPos:
                     if not selectedPiece:  # if there is no piece that already selected
                         selectedPiece = board.chessPieceCheck(pos)
 
                         if selectedPiece:  # if there is a clicked piece
-                            movables = selectedPiece.checkPossibleMove(board.grid)
-                            board.movables = movables
+                            board.movables = selectedPiece.possibleMoves
                     else:  # if there is a selected piece
                         # if selected piece is clicked again, unselect it
                         if selectedPiece.isClicked(pos):
@@ -70,7 +69,10 @@ def main():
                                 selectedPiece.changeStatus(selected=False)
                                 selectedPiece = None
                                 board.movables = []
-                                turn = board.switchTurn()
+
+                                board.checkForChessMate()
+
+                                turn = "RED" if board.turn == RED_TURN else "BLUE"
                             else:
                                 print(f"Cant move there {boardPos}")
 

@@ -1,5 +1,4 @@
 import pygame
-import numpy as np
 from pprint import pprint
 
 from utils import Color, ChessImages, Configuration
@@ -21,7 +20,7 @@ class ChessPiece:
 
         self.side = side
         self.status = self.NOT_SELECTED
-        self.posibleMoves = []
+        self.possibleMoves = []
         self.image = None
 
     def draw(self, win):
@@ -29,9 +28,7 @@ class ChessPiece:
         Draw the piece
         """
         pygame.draw.circle(win, Color.WHITE, self.centrePoint, self.radius)
-        
         x, y = self.centrePoint
-
         if self.status == self.SELECTED:
             pygame.draw.rect(win, Color.GREEN, pygame.Rect(x - self.radius - 1, y - self.radius - 1, self.radius * 2 + 2, self.radius * 2 + 2), 2)
 
@@ -59,8 +56,10 @@ class ChessPiece:
         self.status = self.SELECTED if selected else self.NOT_SELECTED
 
     def checkPossibleMove(self, boardGrid):
+        '''
+        Checking all possible moves of the piece
+        '''
         print("This is not a real chesspiece")
-        return None
 
     def moveToNewSpot(self, centrePoint=None, position=None):
         if not centrePoint:
@@ -76,7 +75,7 @@ class ChessPiece:
         return f"A {self.NAME} at {self.position}"
     
     def __repr__(self):
-        return f"{self.NAME}"
+        return f"{self.NAME}-{self.side}"
 
 
 class Chariot(ChessPiece):
@@ -85,15 +84,13 @@ class Chariot(ChessPiece):
     """
 
     NAME = "Chariot"
-    IMAGE = ChessImages.RED_CHARIOT
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.image = ChessImages.RED_CHARIOT if self.side == RED_SIDE else ChessImages.BLUE_CHARIOT
 
-    def checkPossibleMove(self, boardGrid):
+    def checkPossibleMove(self, boardGrid, update=True, forceMoves=None):
         movables = []
-        boardGrid = np.array(boardGrid)
 
         rowPos, colPos = self.position
 
@@ -140,6 +137,12 @@ class Chariot(ChessPiece):
                 if self.isEnemy(otherPiece):
                     movables.append((rowPos, c))
                 break
+        
+        if forceMoves:
+            movables = [move for move in movables if move in forceMoves]
+        
+        if update:
+            self.possibleMoves = movables
 
         return movables
 
@@ -150,15 +153,13 @@ class Horse(ChessPiece):
     """
 
     NAME = "Horse"
-    IMAGE = ChessImages.RED_HORSE
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.image = ChessImages.RED_HORSE if self.side == RED_SIDE else ChessImages.BLUE_HORSE
 
-    def checkPossibleMove(self, boardGrid):
+    def checkPossibleMove(self, boardGrid, update=True, forceMoves=None):
         movables = []
-        boardGrid = np.array(boardGrid)
 
         rowPos, colPos = self.position
 
@@ -198,6 +199,9 @@ class Horse(ChessPiece):
             newRow = rowPos + mX
             newCol = colPos + mY
 
+            # if newCol == 0 and newRow == 7:
+            #     print(boardGrid[newRow, newCol])
+            
             # Check if the move is valid
             if 0 <= newRow <= 9 and 0 <= newCol <= 8:
                 if not boardGrid[newRow, newCol]:
@@ -206,7 +210,15 @@ class Horse(ChessPiece):
                     otherPiece = boardGrid[newRow, newCol]
                     if self.isEnemy(otherPiece):
                         movables.append((newRow, newCol))
+        
+        if forceMoves:
+            movables = [move for move in movables if move in forceMoves]
 
+        if update:
+            self.possibleMoves = movables
+
+        # print(f"Done cheking move from Horse side {self.side}\n")
+        # pprint(boardGrid)
         return movables
 
 
@@ -216,16 +228,14 @@ class Elephant(ChessPiece):
     """
 
     NAME = "Elephant"
-    IMAGE = ChessImages.RED_ELEPHANT
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.moveLimit = (0, 4) if 0 <= self.position[0] <= 4 else (5, 9)
         self.image = ChessImages.RED_ELEPHANT if self.side == RED_SIDE else ChessImages.BLUE_ELEPHANT
 
-    def checkPossibleMove(self, boardGrid):
+    def checkPossibleMove(self, boardGrid, update=True, forceMoves=None):
         movables = []
-        boardGrid = np.array(boardGrid)
 
         rowPos, colPos = self.position
 
@@ -286,5 +296,63 @@ class Elephant(ChessPiece):
                     otherPiece = boardGrid[rowPos + 2, colPos + 2]
                     if self.isEnemy(otherPiece):
                         movables.append((rowPos + 2, colPos + 2))
+
+        if forceMoves:
+            movables = [move for move in movables if move in forceMoves]
+        
+        if update:
+            self.possibleMoves = movables
+
+        return movables
+
+
+class Lord(ChessPiece):
+    NAME = "Lord"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.moveLimit = (0, 2) if 0 <= self.position[0] <= 2 else (7, 9)
+        self.image = ChessImages.RED_LORD if self.side == RED_SIDE else ChessImages.BLUE_LORD
+        self.mated = False
+    
+    def draw(self, win):
+        super().draw(win)
+        if self.mated:
+            # x, y = self.centrePoint
+            # pygame.draw.rect(win, Color.RED, pygame.Rect(x - self.radius - 3, y - self.radius - 3, self.radius * 2 + 6, self.radius * 2 + 6), 2)
+            pygame.draw.circle(win, Color.RED, self.centrePoint, self.radius + 4, 3)
+    
+    def checkPossibleMove(self, boardGrid, update=True, avoidMoves=None):
+        movables = []
+
+        rowPos, colPos = self.position
+
+        upLimit, downLimt = self.moveLimit
+        leftLimit, rightLimit = (3, 5)
+
+        movesX = [0, 0, 1, -1]
+        movesY = [-1, 1, 0, 0]
+
+        for mX, mY in zip(movesX, movesY):
+            newRow = rowPos + mX
+            newCol = colPos + mY
+
+            # Check if the move is valid
+            if upLimit <= newRow <= downLimt and leftLimit <= newCol <= rightLimit:
+                if not boardGrid[newRow, newCol]:
+                    movables.append((newRow, newCol))
+                else:
+                    otherPiece = boardGrid[newRow, newCol]
+                    if self.isEnemy(otherPiece):
+                        movables.append((newRow, newCol))
+
+        if avoidMoves:
+            print(avoidMoves)
+            print(movables)
+            movables = [move for move in movables if move not in avoidMoves]
+            print(movables)
+        
+        if update:
+            self.possibleMoves = movables
 
         return movables

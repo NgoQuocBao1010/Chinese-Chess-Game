@@ -21,6 +21,7 @@ class ChessPiece:
         self.side = side
         self.status = self.NOT_SELECTED
         self.possibleMoves = []
+        self.blockAttackMoves = []
         self.image = None
 
     def draw(self, win):
@@ -198,9 +199,6 @@ class Horse(ChessPiece):
         for mX, mY in zip(moveX, moveY):
             newRow = rowPos + mX
             newCol = colPos + mY
-
-            # if newCol == 0 and newRow == 7:
-            #     print(boardGrid[newRow, newCol])
             
             # Check if the move is valid
             if 0 <= newRow <= 9 and 0 <= newCol <= 8:
@@ -314,13 +312,27 @@ class Lord(ChessPiece):
         self.moveLimit = (0, 2) if 0 <= self.position[0] <= 2 else (7, 9)
         self.image = ChessImages.RED_LORD if self.side == RED_SIDE else ChessImages.BLUE_LORD
         self.mated = False
+
+        # Animation when lord is under attack
+        self.grow = True
+        self.thickness = 4
+        self.skip = True
+
     
     def draw(self, win):
         super().draw(win)
         if self.mated:
-            # x, y = self.centrePoint
-            # pygame.draw.rect(win, Color.RED, pygame.Rect(x - self.radius - 3, y - self.radius - 3, self.radius * 2 + 6, self.radius * 2 + 6), 2)
-            pygame.draw.circle(win, Color.RED, self.centrePoint, self.radius + 4, 3)
+            if self.grow:
+                self.thickness += 1
+            else:
+                self.thickness -= 1
+
+            if self.thickness == 6:
+                self.grow = False
+            if self.thickness <= 4:
+                self.grow = True
+
+            pygame.draw.circle(win, Color.RED, self.centrePoint, self.radius + self.thickness, self.thickness)
     
     def checkPossibleMove(self, boardGrid, update=True, avoidMoves=None):
         movables = []
@@ -347,11 +359,8 @@ class Lord(ChessPiece):
                         movables.append((newRow, newCol))
 
         if avoidMoves:
-            print(avoidMoves)
-            print(movables)
             movables = [move for move in movables if move not in avoidMoves]
-            print(movables)
-        
+
         if update:
             self.possibleMoves = movables
 

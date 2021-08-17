@@ -17,12 +17,17 @@ GREEN_TURN = Configuration.BLUE_SIDE
 
 
 
-def draw(board, turn):
+def draw(board, turn, movesLeft):
     '''
     Drawing the game to window
     '''
     WIN.fill(Color.BLACK)
     board.drawGrid()
+
+
+    textsurface = myfont.render(f'{turn} has {movesLeft}', False, Color.RED)
+    WIN.blit(textsurface,(0,40))
+
     textsurface = myfont.render(f'This is {turn} turn', False, Color.TURQUOISE)
     WIN.blit(textsurface,(0,0))
     pygame.display.update()
@@ -38,9 +43,15 @@ def main():
     turn = "Red"
 
     run = True
+    movesLeft = 100
+
     while run:
-        draw(board, turn)
+        draw(board, turn, movesLeft)
         # Loop through all events in 1 frames
+
+        if movesLeft == 0:
+            continue
+    
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
@@ -70,7 +81,7 @@ def main():
                                 selectedPiece = None
                                 board.movables = []
 
-                                board.checkForChessMate()
+                                movesLeft = board.checkForChessMate()
 
                                 turn = "RED" if board.turn == RED_TURN else "BLUE"
                             else:

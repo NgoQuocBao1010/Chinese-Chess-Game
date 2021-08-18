@@ -1,10 +1,8 @@
 import pygame
 from pprint import pprint
+import numpy as np
 
-from utils import Color, ChessImages, Configuration
-
-RED_SIDE = Configuration.RED_SIDE
-BLUE_SIDE = Configuration.BLUE_SIDE
+from .utils import Color, ChessImages, RED_SIDE, BLUE_SIDE
 
 
 class ChessPiece:
@@ -21,7 +19,6 @@ class ChessPiece:
         self.side = side
         self.status = self.NOT_SELECTED
         self.possibleMoves = []
-        self.blockAttackMoves = []
         self.image = None
 
     def draw(self, win):
@@ -33,8 +30,8 @@ class ChessPiece:
         if self.status == self.SELECTED:
             pygame.draw.rect(win, Color.GREEN, pygame.Rect(x - self.radius - 1, y - self.radius - 1, self.radius * 2 + 2, self.radius * 2 + 2), 2)
 
-        if self.image:
-            win.blit(self.image, (x - self.radius, y - self.radius))
+        # if self.image:
+        #     win.blit(self.image, (x - self.radius, y - self.radius))
 
     def isClicked(self, pos=None):
         """
@@ -49,12 +46,21 @@ class ChessPiece:
         if (clickX - centerX) ** 2 + (clickY - centerY) ** 2 < self.radius ** 2:
             return True
         return False
+    
+    def getPosition(self):
+        return self.position
 
-    def changeStatus(self, selected=False):
+    def makeSelected(self):
         """
-        Change the color when ever piece is seleceted
+        Make the piece seleceted
         """
-        self.status = self.SELECTED if selected else self.NOT_SELECTED
+        self.status = self.SELECTED
+
+    def deselect(self):
+        """
+        Deleselect the piece
+        """
+        self.status = self.NOT_SELECTED
 
     def checkPossibleMove(self, boardGrid):
         '''
@@ -76,7 +82,15 @@ class ChessPiece:
         return f"A {self.NAME} at {self.position}"
     
     def __repr__(self):
-        return f"{self.NAME}-{self.side}"
+        return f"Object {self.NAME}-{self.side}"
+    
+    def __eq__(self, other):
+        if not isinstance(other, ChessPiece):
+            return False
+        return self.centrePoint == other.centrePoint
+    
+    def __hash__(self):
+        return hash(self.centrePoint)
 
 
 class Chariot(ChessPiece):
@@ -88,9 +102,10 @@ class Chariot(ChessPiece):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.image = ChessImages.RED_CHARIOT if self.side == RED_SIDE else ChessImages.BLUE_CHARIOT
+        # self.image = ChessImages.RED_CHARIOT if self.side == RED_SIDE else ChessImages.BLUE_CHARIOT
 
     def checkPossibleMove(self, boardGrid, update=True, forceMoves=None):
+        boardGrid = np.array(boardGrid)
         movables = []
 
         rowPos, colPos = self.position
@@ -157,9 +172,10 @@ class Horse(ChessPiece):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.image = ChessImages.RED_HORSE if self.side == RED_SIDE else ChessImages.BLUE_HORSE
+        # self.image = ChessImages.RED_HORSE if self.side == RED_SIDE else ChessImages.BLUE_HORSE
 
     def checkPossibleMove(self, boardGrid, update=True, forceMoves=None):
+        boardGrid = np.array(boardGrid)
         movables = []
 
         rowPos, colPos = self.position
@@ -230,9 +246,10 @@ class Elephant(ChessPiece):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.moveLimit = (0, 4) if 0 <= self.position[0] <= 4 else (5, 9)
-        self.image = ChessImages.RED_ELEPHANT if self.side == RED_SIDE else ChessImages.BLUE_ELEPHANT
+        # self.image = ChessImages.RED_ELEPHANT if self.side == RED_SIDE else ChessImages.BLUE_ELEPHANT
 
     def checkPossibleMove(self, boardGrid, update=True, forceMoves=None):
+        boardGrid = np.array(boardGrid)
         movables = []
 
         rowPos, colPos = self.position
@@ -310,7 +327,7 @@ class Lord(ChessPiece):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.moveLimit = (0, 2) if 0 <= self.position[0] <= 2 else (7, 9)
-        self.image = ChessImages.RED_LORD if self.side == RED_SIDE else ChessImages.BLUE_LORD
+        # self.image = ChessImages.RED_LORD if self.side == RED_SIDE else ChessImages.BLUE_LORD
         self.mated = False
 
         # Animation when lord is under attack
@@ -335,6 +352,7 @@ class Lord(ChessPiece):
             pygame.draw.circle(win, Color.RED, self.centrePoint, self.radius + self.thickness, self.thickness)
     
     def checkPossibleMove(self, boardGrid, update=True, avoidMoves=None):
+        boardGrid = np.array(boardGrid)
         movables = []
 
         rowPos, colPos = self.position

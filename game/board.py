@@ -2,15 +2,13 @@ import pygame
 import numpy as np
 from pprint import pprint
 
-from utils import Configuration, Color
-from chesspiece import Chariot, Horse, Elephant, Lord
+from .pieces import Chariot, Horse, Elephant, Lord
 
-RED_SIDE = Configuration.RED_SIDE
-BLUE_SIDE = Configuration.BLUE_SIDE
+from .utils import Color, RED_SIDE, BLUE_SIDE, WIN_HEIGHT, WIN_WIDTH
+
 
 class BoardGame:
-    def __init__(self, win):
-        self.win = win
+    def __init__(self):
         self.rows = 9
         self.cols = 8
 
@@ -24,7 +22,6 @@ class BoardGame:
         self.grid = [
             [None for _ in range(self.cols + 1)] for _ in range(self.rows + 1)
         ]
-        self.grid = np.array(self.grid)
         # contains all active pieces all the board
         self.activePices = []
         # contains all movable positions
@@ -35,11 +32,14 @@ class BoardGame:
         self.blueLord = None
         self.redLord = None
 
-        self.generatePosition()
+        self.calculatePostion()
         self.makeGrid()
 
-
     def addNewPiece(self, type, position, side):
+        '''
+        Add new piece to the board
+        Help set up the board
+        '''
         chessTypes = {
             "chariot": Chariot,
             "horse": Horse,
@@ -58,11 +58,11 @@ class BoardGame:
                 self.blueLord = newPiece
         
         row, col = position
-        self.grid[row, col] = newPiece
+        self.grid[row][col] = newPiece
     
     def makeGrid(self):
         '''
-        Set up the board at the beginning of the game
+        Set up all the pieces and their positions in the board at the beginning of the game
         '''
         side = [RED_SIDE, BLUE_SIDE]
         pieces = ["chariot", "horse", "elephant", "lord"]
@@ -80,7 +80,7 @@ class BoardGame:
         for piece in self.activePices:
             piece.checkPossibleMove(self.grid)
 
-    def drawGrid(self):
+    def drawGrid(self, win):
         """
         Draw the chess board
         """
@@ -90,7 +90,7 @@ class BoardGame:
         # Draw all the lines
         for row in range(self.rows + 1):
             pygame.draw.line(
-                self.win,
+                win,
                 Color.GREY,
                 (self.x, self.y + row * self.gap),
                 (self.x + self.width, self.y + row * self.gap),
@@ -102,7 +102,7 @@ class BoardGame:
 
             for col in range(self.cols + 1):
                 pygame.draw.line(
-                    self.win,
+                    win,
                     Color.GREY,
                     (col * self.gap + self.x, self.y),
                     (col * self.gap + self.x, self.height + self.y),
@@ -129,19 +129,19 @@ class BoardGame:
             ),
         ]
         for point1, point2 in palaceCoors:
-            pygame.draw.line(self.win, Color.GREY, point1, point2, 2)
-            # pygame.draw.circle(win, Color.BLUE, point1, 25)
+            pygame.draw.line(win, Color.GREY, point1, point2, 2)
+            
 
         # Draw the river
         pygame.draw.rect(
-            self.win,
+            win,
             Color.BLACK,
             pygame.Rect(*riverCoordinate, self.width - 2, self.gap - 2),
         )
 
         # Draw the border
         self.rectangle = pygame.draw.rect(
-            self.win,
+            win,
             Color.WHITE,
             (
                 self.x - self.border,
@@ -153,24 +153,24 @@ class BoardGame:
         )
 
         for piece in self.activePices:
-            piece.draw(self.win)
+            piece.draw(win)
 
         for position in self.movables:
             coor = self.getCoordinateFromPosition(position)
-            pygame.draw.circle(self.win, Color.GREEN, coor, 7)
+            pygame.draw.circle(win, Color.GREEN, coor, 7)
 
-    def generatePosition(self):
+    def calculatePostion(self):
         """
         Calculate the coordinate of the board
         The board should be center horizontally and occupied 75% bottom half of the window
         """
 
-        self.x = (Configuration.WIN_WIDTH - self.width) / 2
-        self.y = Configuration.WIN_HEIGHT * 5 / 100
+        self.x = (WIN_WIDTH - self.width) / 2
+        self.y = WIN_HEIGHT * 5 / 100
 
     def getCoordinateFromPosition(self, position=None):
         """
-        Get the centre coordinate of a chess piece by giving its row and cols
+        Get the centre coordinate of a chess piece by giving its row and column
         """
         if not position:
             return None
@@ -181,36 +181,48 @@ class BoardGame:
         y = self.y + self.gap * row
         return (x, y)
 
-    def isClicked(self, pos=None):
+    def getPositionFromCoordinate(self, coordinate):
+        '''
+        Get row and column from given game's coordinate
+        '''
+        x, y = coordinate
+        col = round((x - self.x) / self.gap)
+        row = round((y - self.y) / self.gap)
+
+        return (row, col) 
+
+    def getPiece(self, position):
+        '''
+        Get piece from given location
+        '''
+        row, col = position
+        return self.grid[row][col]
+    
+    def isClicked(self, clickedPos=None):
         """
         Take mouse clicked positon as an argument
         Check if mouse is clicked on the board
         """
-        if not pos:
-            return None
+        if not clickedPos:
+            return False
 
-        clickX, clickY = pos
+        clickX, clickY = clickedPos
 
         if clickX < self.x - self.border or clickX > self.x + self.width + self.border:
-            return None
+            return False
 
         if clickY < self.y - self.border or clickY > self.y + self.height + self.border:
-            return None
+            return False
 
-        col = round((clickX - self.x) / self.gap)
-        row = round((clickY - self.y) / self.gap)
-
-        return (row, col)
-
-    def chessPieceCheck(self, pos=None):
-        if not pos:
-            return None
-
-        pieces = [piece for piece in self.activePices if piece.side == self.turn]
-        for piece in pieces:
-            if piece.isClicked(pos):
-                piece.changeStatus(selected=True)
-                return piece
+        return True
+    
+    def deselectPiece(self, piecePos):
+        '''
+        Deselect a piece
+        '''
+        piece = self.getPiece(piecePos)
+        piece.deselect()
+        self.movables = []
 
         return None
 
@@ -224,11 +236,11 @@ class BoardGame:
         oldRow, oldCol = piece.position
         newRow, newCol = newPos
 
-        if self.grid[newRow, newCol]:
+        if self.grid[newRow][newCol]:
             self.activePices.remove(self.grid[newRow, newCol])
 
-        self.grid[oldRow, oldCol] = None
-        self.grid[newRow, newCol] = piece
+        self.grid[oldRow][oldCol] = None
+        self.grid[newRow][newCol] = piece
 
         newCentrePoint = self.getCoordinateFromPosition(newPos)
         piece.moveToNewSpot(centrePoint=newCentrePoint, position=newPos)
@@ -256,6 +268,7 @@ class BoardGame:
                 moves = piece.checkPossibleMove(self.grid)
                 enemyMoves += moves
                 if tuple(lordPiece.position) in moves:
+                    print(piece)
                     checkMateMoves.setdefault(piece, moves)
         
         # If there is a check then solve it
@@ -275,8 +288,6 @@ class BoardGame:
                         totalMoves += len(piece.checkPossibleMove(self.grid))
         
         return totalMoves
-        
-        
 
     def solveCheck(self, piece, posMoves, lordPiece, enemyMoves):
         '''
@@ -344,12 +355,10 @@ class BoardGame:
                 totalMoves += len(piece.checkPossibleMove(self.grid, avoidMoves=avoidMoves))
             else:
                 totalMoves += len(piece.checkPossibleMove(self.grid, forceMoves=solveMoves))
-                # print(piece, piece.possibleMoves)
-        print(totalMoves)
+                
         return totalMoves
+    
+    def test(self):
+        for piece in self.activePices:
+            piece.checkPossibleMove(self.grid)
         
-
-
-
-        
-

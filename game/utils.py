@@ -1,13 +1,12 @@
 import pygame
 
-class Configuration:
-    # Width and height of the application
-    WIN_WIDTH = 900
-    WIN_HEIGHT = 600
+# Width and height of the application
+WIN_WIDTH = 900
+WIN_HEIGHT = 600
 
-    # Red side, blue side indicator
-    RED_SIDE = 1
-    BLUE_SIDE = 0
+# Red side, blue side indicator
+RED_SIDE = RED_TURN = 1
+BLUE_SIDE = BLUE_TURN = 0
 
 class Color:
     RED = (255, 0, 0)

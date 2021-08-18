@@ -1,28 +1,30 @@
 import pygame
 
-from utils import Color, Configuration
-from chessBoard import BoardGame
+# from utils import Color, Configuration
+# from chessBoard import BoardGame
+
+from game.utils import Color, RED_TURN, BLUE_TURN, WIN_HEIGHT, WIN_WIDTH
+from game.board import BoardGame
+from game.game import Game
 
 # Window's Configuration
-WIN_WIDTH = Configuration.WIN_WIDTH  # height and width of window
-WIN_HEIGHT = Configuration.WIN_HEIGHT
+WIN_WIDTH = WIN_WIDTH  # height and width of window
+WIN_HEIGHT = WIN_HEIGHT
 
 WIN = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGHT))  # initilize win form
 pygame.display.set_caption("LINE 98")  # win caption
 pygame.font.init()
 myfont = pygame.font.SysFont('Comic Sans MS', 15)
 
-RED_TURN = Configuration.RED_SIDE
-GREEN_TURN = Configuration.BLUE_SIDE
 
 
 
-def draw(board, turn, movesLeft):
+def draw(game, turn, movesLeft):
     '''
     Drawing the game to window
     '''
     WIN.fill(Color.BLACK)
-    board.drawGrid()
+    game.updateGame()
 
 
     textsurface = myfont.render(f'{turn} has {movesLeft}', False, Color.RED)
@@ -37,7 +39,8 @@ def main():
     '''
     Main function
     '''
-    board = BoardGame(WIN)
+
+    game = Game(WIN)
     selectedPiece = None
 
     turn = "Red"
@@ -46,7 +49,7 @@ def main():
     movesLeft = 100
 
     while run:
-        draw(board, turn, movesLeft)
+        draw(game, turn, movesLeft)
         # Loop through all events in 1 frames
 
         if movesLeft == 0:
@@ -59,33 +62,8 @@ def main():
 
             pos = pygame.mouse.get_pos()
             if pygame.mouse.get_pressed()[0]:
-                boardPos = board.isClicked(pos)  # check if user clicked on any position on the board
-                if boardPos:
-                    if not selectedPiece:  # if there is no piece that already selected
-                        selectedPiece = board.chessPieceCheck(pos)
-
-                        if selectedPiece:  # if there is a clicked piece
-                            board.movables = selectedPiece.possibleMoves
-                    else:  # if there is a selected piece
-                        # if selected piece is clicked again, unselect it
-                        if selectedPiece.isClicked(pos):
-                            selectedPiece.changeStatus(selected=False)
-                            selectedPiece = None
-                            board.movables = []
-                        # if another position is clicked
-                        else:
-                            # if piece can move to that position
-                            if boardPos in board.movables:
-                                board.movePiece(selectedPiece, boardPos)
-                                selectedPiece.changeStatus(selected=False)
-                                selectedPiece = None
-                                board.movables = []
-
-                                movesLeft = board.checkForChessMate()
-
-                                turn = "RED" if board.turn == RED_TURN else "BLUE"
-                            else:
-                                print(f"Cant move there {boardPos}")
+                game.checkForMove(pos)
+                
 
 
 if __name__ == "__main__":

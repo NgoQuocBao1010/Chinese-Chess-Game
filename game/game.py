@@ -10,15 +10,30 @@ from .pieces import Chariot, Horse, Elephant, Lord
 class Game:
     def __init__(self, win):
         self.win = win
-        self.board = BoardGame()
-        self.turn = RED_TURN
-        self.selectedPiece = None
-
-        self.enemyPieces = []
-        self.calculateNextMoves()
-    
+        self._init()
+        
     def updateGame(self):
         self.board.drawGrid(self.win)
+    
+    def _init(self):
+        '''
+        Initilize new board
+        '''
+        self.board = BoardGame()
+        self.gameover = False
+        self.turn = RED_TURN
+        self.selectedPiece = None
+        self.enemyPieces = []
+    
+    @property
+    def isOver(self):
+        return self.gameover
+    
+    def resetGame(self):
+        '''
+        Reset the game
+        '''
+        self._init()
     
     def switchTurn(self):
         '''
@@ -28,6 +43,9 @@ class Game:
         self.enemyPieces = [ piece for piece in self.board.activePices if piece.side != self.turn ]
     
     def checkForMove(self, clickedPos):
+        '''
+        Check for click event to move pieces around in the game
+        '''
         clickX, clickY = clickedPos
         
         # Check if any position in the board is clicked
@@ -49,7 +67,6 @@ class Game:
                 else:
                     # if piece can move to that position
                     self.move(postion)
-                    self.checkForMated()
 
         else:  # If other the board is not clicked, diselect any selected piece
             if self.selectedPiece is not None:
@@ -57,16 +74,24 @@ class Game:
                 self.selectedPiece = None
 
     def move(self, postion):
+        '''
+        Moving the piece
+        '''
         if postion in self.board.movables:
             self.board.movePiece(self.selectedPiece, postion)
             self.selectedPiece = None
-            self.checkForMated()
             self.switchTurn()
-            self.calculateNextMoves()
+            self.checkForMated()
+            
+            if self.calculateNextMoves() == 0:
+                self.gameover = True
         else: 
             print(f"Cant move there {postion}")
     
     def checkForMated(self):
+        '''
+        Check if the lord is under attack
+        '''
         lordPiece = self.board.getLord(self.turn)
         enemyMoves = []
         for p in self.enemyPieces:
@@ -81,7 +106,7 @@ class Game:
         '''
         piecesInTurn = [ piece for piece in self.board.activePices if piece.side == self.turn ]  # get all pieces that in the turn to move
         
-        allMoves = {}
+        nextMoves = 0
 
         for piece in piecesInTurn:
             moves = piece.checkPossibleMove(self.board.grid)
@@ -99,10 +124,13 @@ class Game:
                     if p.getSide() != self.turn:
                         enemyMoves += p.checkPossibleMove(tempBoard.grid)
                 
-                if tuple(lordPiece.position) in enemyMoves:
+                if tuple(lordPiece.position) in enemyMoves or tempBoard.lordTolord():
                     continue
                 
                 validMoves.append(move)
             
-            allMoves.setdefault(piece, validMoves)
+            nextMoves += len(validMoves)
             piece.possibleMoves = validMoves
+        
+
+        return nextMoves

@@ -1,9 +1,9 @@
 import pygame
+import os
 import numpy as np
 from pprint import pprint
 
-from .pieces import Chariot, Horse, Elephant, Soldier, Lord
-
+from .pieces import Chariot, Cannon, Horse, Elephant, Soldier, Advisor, Lord
 from .utils import Color, RED_SIDE, BLUE_SIDE, WIN_HEIGHT, WIN_WIDTH
 
 
@@ -42,9 +42,11 @@ class BoardGame:
         '''
         chessTypes = {
             "chariot": Chariot,
+            "cannon": Cannon,
             "horse": Horse,
             "elephant": Elephant,
             "soldier": Soldier,
+            "advisor": Advisor,
             "lord": Lord,
         }
 
@@ -61,21 +63,39 @@ class BoardGame:
         row, col = position
         self.grid[row][col] = newPiece
     
+    def readPreset(self):
+        directory = os.path.dirname(__file__)
+        presetPath = os.path.join(directory, "presets/standard.cfg")
+        seperator = " ******** "
+
+        with open(presetPath, "r") as f:
+            lines = f.readlines()
+        
+        result = []
+        for line in lines:
+            line = line[:-1]
+            
+            piece, row, col, side = line.split(seperator)
+            
+            row, col = int(row), int(col)
+            position = (row, col)
+            
+            side = RED_SIDE if side == "red" else BLUE_SIDE
+
+            result.append((piece, position, side))
+        
+        return result
+        
     def makeGrid(self):
         '''
         Set up all the pieces and their positions in the board at the beginning of the game
         '''
-        side = [RED_SIDE, BLUE_SIDE]
-        pieces = ["chariot", "horse", "elephant", "soldier", "lord"]
-        getPos = {
-            RED_SIDE: [(9, 0) , (9, 1), (9, 2), [6, 0], [9, 4]],
-            BLUE_SIDE: [(0, 8) , (0, 7), (0, 6), [3, 0], [0, 4]],
-        }
+        pieces = self.readPreset()
 
-        for side in side:
-            positions = getPos.get(side)
-            for piece, pos in zip(pieces, positions):
-                self.addNewPiece(piece, pos, side)
+
+        for piece, position, side in pieces:
+            self.addNewPiece(piece, position, side)
+
 
         # Check all possible move for all the pieces after initialize the board
         for piece in self.activePices:
@@ -240,6 +260,9 @@ class BoardGame:
 
         # print(f"Moving {piece} to {newPos}")
 
+        lordPiece = self.getLord(side=self.turn)
+        lordPiece.mated = False
+
         oldRow, oldCol = piece.position
         newRow, newCol = newPos
 
@@ -257,4 +280,20 @@ class BoardGame:
         # Swich turn
         self.turn = RED_SIDE if self.turn == BLUE_SIDE else BLUE_SIDE
         
-     
+    def lordTolord(self):
+        row1, col1 = self.redLord.getPosition()
+        row2, col2 = self.blueLord.getPosition()
+
+        if col1 == col2:
+            up = max(row1, row2)
+            down = min(row1, row2)
+
+            column = np.array(self.grid)[:, col1]
+
+            for index in range(down + 1, up):
+                if column[index] is not None:
+                    return False
+            
+            return True
+        else:            
+            return False

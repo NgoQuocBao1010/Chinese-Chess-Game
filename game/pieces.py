@@ -37,6 +37,12 @@ class ChessPiece:
         if isinstance(self, Chariot):
             return ChessImages.RED_CHARIOT if self.getSide() == RED_SIDE else ChessImages.BLUE_CHARIOT
 
+        if isinstance(self, Cannon):
+            return ChessImages.RED_CANNON if self.getSide() == RED_SIDE else ChessImages.BLUE_CANNON
+
+        if isinstance(self, Advisor):
+            return ChessImages.RED_ADVISOR if self.getSide() == RED_SIDE else ChessImages.BLUE_ADVISOR
+
         if isinstance(self, Lord):
             return ChessImages.RED_LORD if self.getSide() == RED_SIDE else ChessImages.BLUE_LORD
         
@@ -174,6 +180,93 @@ class Chariot(ChessPiece):
                 if self.isEnemy(otherPiece):
                     movables.append((rowPos, c))
                 break
+        
+        if update:
+            self.possibleMoves = movables
+
+        return movables
+
+
+class Cannon(ChessPiece):
+    """
+    Cannon chess piece
+    """
+
+    NAME = "Cannon"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def checkPossibleMove(self, boardGrid, update=True):
+        boardGrid = np.array(boardGrid)
+        movables = []
+
+        rowPos, colPos = self.position
+
+        column = boardGrid[:, colPos]  # get the whole colummn
+        skip = False
+        # Move up
+        for r in range(
+            rowPos - 1, -1, -1
+        ):  # get all the row above current row, except current row
+            if not skip:
+                if column[r] is None:
+                    movables.append((r, colPos))
+                else:
+                    skip = True
+            else:
+                otherPiece = column[r]
+                if otherPiece is not None:
+                    if self.isEnemy(otherPiece):
+                        movables.append((r, colPos))
+                    break
+
+        # Move down
+        skip = False
+        for r in range(rowPos + 1, 10):
+            if not skip:
+                if column[r] is None:
+                    movables.append((r, colPos))
+                else:
+                    skip = True
+            else:
+                otherPiece = column[r]
+                if otherPiece is not None:
+                    if self.isEnemy(otherPiece):
+                        movables.append((r, colPos))
+                    break
+
+
+        row = boardGrid[rowPos]  # get the whole row
+        # Move left
+        skip = False
+        for c in range(colPos - 1, -1, -1):
+            if not skip:
+                if row[c] is None:
+                    movables.append((rowPos, c))
+                else:
+                    skip = True
+            else:
+                otherPiece = row[c]
+                if otherPiece is not None:
+                    if self.isEnemy(otherPiece):
+                        movables.append((rowPos, c))
+                    break
+
+        # Move right
+        skip = False
+        for c in range(colPos + 1, 9):
+            if not skip:
+                if row[c] is None:
+                    movables.append((rowPos, c))
+                else:
+                    skip = True
+            else:
+                otherPiece = row[c]
+                if otherPiece is not None:
+                    if self.isEnemy(otherPiece):
+                        movables.append((rowPos, c))
+                    break
         
         if update:
             self.possibleMoves = movables
@@ -348,7 +441,10 @@ class Soldier(ChessPiece):
 
         rowPos, colPos = self.position
 
-        if rowPos > self.riverLine:
+        if self.direction == 1 and rowPos > self.riverLine:
+            self.goSideWay = True
+
+        if self.direction == -1 and rowPos < self.riverLine:
             self.goSideWay = True
         
         # Move up
@@ -358,7 +454,12 @@ class Soldier(ChessPiece):
                 movables.append((newRow, colPos))
         
         if self.goSideWay:
-            pass
+            directionsX = [1, -1]
+            for direction in directionsX:
+                newCol = colPos + direction
+                if 0 <= newCol <= 8:
+                    if boardGrid[rowPos, newCol] is None or self.isEnemy(boardGrid[rowPos, newCol]):
+                        movables.append((rowPos, newCol))
         
         if update:
             self.possibleMoves = movables
@@ -372,7 +473,6 @@ class Lord(ChessPiece):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.moveLimit = (0, 2) if 0 <= self.position[0] <= 2 else (7, 9)
-        # self.image = ChessImages.RED_LORD if self.side == RED_SIDE else ChessImages.BLUE_LORD
         self.mated = False
 
         # Animation when lord is under attack
@@ -393,7 +493,47 @@ class Lord(ChessPiece):
             if self.thickness <= 4:
                 self.grow = True
 
-            pygame.draw.circle(win, Color.RED, self.centrePoint, self.radius + self.thickness, self.thickness)
+            pygame.draw.circle(win, Color.RED, self.centrePoint, self.radius + self.thickness, self.thickness)   
+
+    def checkPossibleMove(self, boardGrid, update=True):
+        boardGrid = np.array(boardGrid)
+        movables = []
+
+        rowPos, colPos = self.position
+
+        upLimit, downLimt = self.moveLimit
+        leftLimit, rightLimit = (3, 5)
+
+
+        movesX = [0, 0, 1, -1]
+        movesY = [-1, 1, 0, 0]
+
+        for mX, mY in zip(movesX, movesY):
+            newRow = rowPos + mX
+            newCol = colPos + mY
+
+            # Check if the move is valid
+            if upLimit <= newRow <= downLimt and leftLimit <= newCol <= rightLimit:
+                if not boardGrid[newRow, newCol]:
+                    movables.append((newRow, newCol))
+                else:
+                    otherPiece = boardGrid[newRow, newCol]
+                    if self.isEnemy(otherPiece):
+                        movables.append((newRow, newCol))
+
+        
+        if update:
+            self.possibleMoves = movables
+
+        return movables
+
+
+class Advisor(ChessPiece):
+    NAME = "Advisor"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.moveLimit = (0, 2) if 0 <= self.position[0] <= 2 else (7, 9)
     
     def checkPossibleMove(self, boardGrid, update=True):
         boardGrid = np.array(boardGrid)
@@ -404,8 +544,8 @@ class Lord(ChessPiece):
         upLimit, downLimt = self.moveLimit
         leftLimit, rightLimit = (3, 5)
 
-        movesX = [0, 0, 1, -1]
-        movesY = [-1, 1, 0, 0]
+        movesX = [1, 1, -1, -1]
+        movesY = [-1, 1, 1, -1]
 
         for mX, mY in zip(movesX, movesY):
             newRow = rowPos + mX
@@ -424,3 +564,4 @@ class Lord(ChessPiece):
             self.possibleMoves = movables
 
         return movables
+    

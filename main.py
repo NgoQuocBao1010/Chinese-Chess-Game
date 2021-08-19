@@ -19,7 +19,7 @@ myfont = pygame.font.SysFont('Comic Sans MS', 15)
 
 
 
-def draw(game, turn, movesLeft):
+def draw(game, turn):
     '''
     Drawing the game to window
     '''
@@ -27,11 +27,11 @@ def draw(game, turn, movesLeft):
     game.updateGame()
 
 
-    textsurface = myfont.render(f'{turn} has {movesLeft}', False, Color.RED)
-    WIN.blit(textsurface,(0,40))
+    # textsurface = myfont.render(f'{turn} has {movesLeft}', False, Color.RED)
+    # WIN.blit(textsurface,(0,40))
 
-    textsurface = myfont.render(f'This is {turn} turn', False, Color.TURQUOISE)
-    WIN.blit(textsurface,(0,0))
+    # textsurface = myfont.render(f'This is {turn} turn', False, Color.TURQUOISE)
+    # WIN.blit(textsurface,(0,0))
     pygame.display.update()
 
 
@@ -41,20 +41,14 @@ def main():
     '''
 
     game = Game(WIN)
-    selectedPiece = None
 
     turn = "Red"
 
     run = True
-    movesLeft = 100
 
     while run:
-        draw(game, turn, movesLeft)
+        draw(game, turn)
         # Loop through all events in 1 frames
-
-        if movesLeft == 0:
-            continue
-    
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
@@ -62,7 +56,10 @@ def main():
 
             pos = pygame.mouse.get_pos()
             if pygame.mouse.get_pressed()[0]:
-                game.checkForMove(pos)
+                if not game.isOver:
+                    game.checkForMove(pos)
+                else:
+                    print("Game is over")
                 
 
 

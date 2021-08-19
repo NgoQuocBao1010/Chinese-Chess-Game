@@ -23,15 +23,19 @@ class Color:
 
 class ChessImages:
     RED_CHARIOT = pygame.image.load("./images/red-car.png")
+    RED_CANNON = pygame.image.load("./images/red-cannon.png")
     RED_HORSE = pygame.image.load("./images/red-horse.png")
     RED_ELEPHANT = pygame.image.load("./images/red-elephant.png")
     RED_SOLDIER = pygame.image.load("./images/red-pawn.png")
+    RED_ADVISOR = pygame.image.load("./images/red-bodyguard.png")
     RED_LORD = pygame.image.load("./images/red-king.png")
 
     BLUE_CHARIOT = pygame.image.load("./images/blue-car.png")
+    BLUE_CANNON = pygame.image.load("./images/blue-cannon.png")
     BLUE_HORSE = pygame.image.load("./images/blue-horse.png")
     BLUE_ELEPHANT = pygame.image.load("./images/blue-elephant.png")
     BLUE_SOLDIER = pygame.image.load("./images/blue-pawn.png")
+    BLUE_ADVISOR = pygame.image.load("./images/blue-bodyguard.png")
     BLUE_LORD = pygame.image.load("./images/blue-king.png")
         
         

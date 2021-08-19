@@ -21,6 +21,25 @@ class ChessPiece:
         self.possibleMoves = []
         self.image = None
 
+    def _getImage(self):
+        '''
+        Get image of piece depends on its side and type
+        '''
+        if isinstance(self, Horse):
+            return ChessImages.RED_HORSE if self.getSide() == RED_SIDE else ChessImages.BLUE_HORSE
+
+        if isinstance(self, Soldier):
+            return ChessImages.RED_SOLDIER if self.getSide() == RED_SIDE else ChessImages.BLUE_SOLDIER
+
+        if isinstance(self, Elephant):
+            return ChessImages.RED_ELEPHANT if self.getSide() == RED_SIDE else ChessImages.BLUE_ELEPHANT
+
+        if isinstance(self, Chariot):
+            return ChessImages.RED_CHARIOT if self.getSide() == RED_SIDE else ChessImages.BLUE_CHARIOT
+
+        if isinstance(self, Lord):
+            return ChessImages.RED_LORD if self.getSide() == RED_SIDE else ChessImages.BLUE_LORD
+        
     def draw(self, win):
         """
         Draw the piece
@@ -30,8 +49,8 @@ class ChessPiece:
         if self.status == self.SELECTED:
             pygame.draw.rect(win, Color.GREEN, pygame.Rect(x - self.radius - 1, y - self.radius - 1, self.radius * 2 + 2, self.radius * 2 + 2), 2)
 
-        # if self.image:
-        #     win.blit(self.image, (x - self.radius, y - self.radius))
+        image = self._getImage()
+        win.blit(image, (x - self.radius, y - self.radius))
 
     def isClicked(self, pos=None):
         """
@@ -75,8 +94,11 @@ class ChessPiece:
         self.centrePoint = centrePoint
         self.position = position
 
+    def getSide(self):
+        return self.side
+    
     def isEnemy(self, other):
-        return True if other.side != self.side else False
+        return True if other.getSide() != self.getSide() else False
     
     def __str__(self):
         return f"A {self.NAME} at {self.position}"
@@ -102,9 +124,8 @@ class Chariot(ChessPiece):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # self.image = ChessImages.RED_CHARIOT if self.side == RED_SIDE else ChessImages.BLUE_CHARIOT
 
-    def checkPossibleMove(self, boardGrid, update=True, forceMoves=None):
+    def checkPossibleMove(self, boardGrid, update=True):
         boardGrid = np.array(boardGrid)
         movables = []
 
@@ -154,9 +175,6 @@ class Chariot(ChessPiece):
                     movables.append((rowPos, c))
                 break
         
-        if forceMoves:
-            movables = [move for move in movables if move in forceMoves]
-        
         if update:
             self.possibleMoves = movables
 
@@ -174,7 +192,7 @@ class Horse(ChessPiece):
         super().__init__(*args, **kwargs)
         # self.image = ChessImages.RED_HORSE if self.side == RED_SIDE else ChessImages.BLUE_HORSE
 
-    def checkPossibleMove(self, boardGrid, update=True, forceMoves=None):
+    def checkPossibleMove(self, boardGrid, update=True):
         boardGrid = np.array(boardGrid)
         movables = []
 
@@ -224,9 +242,6 @@ class Horse(ChessPiece):
                     otherPiece = boardGrid[newRow, newCol]
                     if self.isEnemy(otherPiece):
                         movables.append((newRow, newCol))
-        
-        if forceMoves:
-            movables = [move for move in movables if move in forceMoves]
 
         if update:
             self.possibleMoves = movables
@@ -246,9 +261,8 @@ class Elephant(ChessPiece):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.moveLimit = (0, 4) if 0 <= self.position[0] <= 4 else (5, 9)
-        # self.image = ChessImages.RED_ELEPHANT if self.side == RED_SIDE else ChessImages.BLUE_ELEPHANT
 
-    def checkPossibleMove(self, boardGrid, update=True, forceMoves=None):
+    def checkPossibleMove(self, boardGrid, update=True):
         boardGrid = np.array(boardGrid)
         movables = []
 
@@ -312,14 +326,45 @@ class Elephant(ChessPiece):
                     if self.isEnemy(otherPiece):
                         movables.append((rowPos + 2, colPos + 2))
 
-        if forceMoves:
-            movables = [move for move in movables if move in forceMoves]
-        
         if update:
             self.possibleMoves = movables
 
         return movables
 
+
+class Soldier(ChessPiece):
+    NAME = "Soldier"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.goSideWay = False
+        self.riverLine = 4 if self.position[0] < 4 else 5
+        self.direction = 1 if self.position[0] < 4 else -1
+    
+    def checkPossibleMove(self, boardGrid, update=True):
+        boardGrid = np.array(boardGrid)
+        movables = []
+
+        rowPos, colPos = self.position
+
+        if rowPos > self.riverLine:
+            self.goSideWay = True
+        
+        # Move up
+        newRow = rowPos + self.direction
+        if 0 <= newRow <= 9:
+            if boardGrid[newRow, colPos] is None or self.isEnemy(boardGrid[newRow, colPos]):
+                movables.append((newRow, colPos))
+        
+        if self.goSideWay:
+            pass
+        
+        if update:
+            self.possibleMoves = movables
+        
+        return movables
+    
 
 class Lord(ChessPiece):
     NAME = "Lord"
@@ -335,7 +380,6 @@ class Lord(ChessPiece):
         self.thickness = 4
         self.skip = True
 
-    
     def draw(self, win):
         super().draw(win)
         if self.mated:
@@ -351,7 +395,7 @@ class Lord(ChessPiece):
 
             pygame.draw.circle(win, Color.RED, self.centrePoint, self.radius + self.thickness, self.thickness)
     
-    def checkPossibleMove(self, boardGrid, update=True, avoidMoves=None):
+    def checkPossibleMove(self, boardGrid, update=True):
         boardGrid = np.array(boardGrid)
         movables = []
 
@@ -375,9 +419,6 @@ class Lord(ChessPiece):
                     otherPiece = boardGrid[newRow, newCol]
                     if self.isEnemy(otherPiece):
                         movables.append((newRow, newCol))
-
-        if avoidMoves:
-            movables = [move for move in movables if move not in avoidMoves]
 
         if update:
             self.possibleMoves = movables

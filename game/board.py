@@ -2,7 +2,7 @@ import pygame
 import numpy as np
 from pprint import pprint
 
-from .pieces import Chariot, Horse, Elephant, Lord
+from .pieces import Chariot, Horse, Elephant, Soldier, Lord
 
 from .utils import Color, RED_SIDE, BLUE_SIDE, WIN_HEIGHT, WIN_WIDTH
 
@@ -44,6 +44,7 @@ class BoardGame:
             "chariot": Chariot,
             "horse": Horse,
             "elephant": Elephant,
+            "soldier": Soldier,
             "lord": Lord,
         }
 
@@ -65,10 +66,10 @@ class BoardGame:
         Set up all the pieces and their positions in the board at the beginning of the game
         '''
         side = [RED_SIDE, BLUE_SIDE]
-        pieces = ["chariot", "horse", "elephant", "lord"]
+        pieces = ["chariot", "horse", "elephant", "soldier", "lord"]
         getPos = {
-            RED_SIDE: [(9, 0) , (9, 1), (9, 2), [9, 4]],
-            BLUE_SIDE: [(0, 8) , (0, 7), (0, 6), [0, 4]],
+            RED_SIDE: [(9, 0) , (9, 1), (9, 2), [6, 0], [9, 4]],
+            BLUE_SIDE: [(0, 8) , (0, 7), (0, 6), [3, 0], [0, 4]],
         }
 
         for side in side:
@@ -198,6 +199,12 @@ class BoardGame:
         row, col = position
         return self.grid[row][col]
     
+    def getLord(self, side):
+        '''
+        Return the lord piece depends on the given side
+        '''
+        return self.redLord if side == RED_SIDE else self.blueLord
+    
     def isClicked(self, clickedPos=None):
         """
         Take mouse clicked positon as an argument
@@ -236,8 +243,10 @@ class BoardGame:
         oldRow, oldCol = piece.position
         newRow, newCol = newPos
 
+        self.deselectPiece(piece.position)
+
         if self.grid[newRow][newCol]:
-            self.activePices.remove(self.grid[newRow, newCol])
+            self.activePices.remove(self.grid[newRow][newCol])
 
         self.grid[oldRow][oldCol] = None
         self.grid[newRow][newCol] = piece
@@ -248,117 +257,4 @@ class BoardGame:
         # Swich turn
         self.turn = RED_SIDE if self.turn == BLUE_SIDE else BLUE_SIDE
         
-    def checkForChessMate(self):
-        '''
-        Checking the board after every moves
-        '''
-        totalMoves = 0
-        self.redLord.mated = False
-        self.blueLord.mated = False
-
-        enemyMoves = []
-        checkMateMoves = {}
-        lordPiece = self.redLord if self.turn == RED_SIDE else self.blueLord
-
-        for piece in self.activePices:
-            if not piece.isEnemy(lordPiece):
-                continue
-            else:
-                # Check move from enemy to see if the king is checked
-                moves = piece.checkPossibleMove(self.grid)
-                enemyMoves += moves
-                if tuple(lordPiece.position) in moves:
-                    print(piece)
-                    checkMateMoves.setdefault(piece, moves)
-        
-        # If there is a check then solve it
-        if len(checkMateMoves) > 0:
-            lordPiece.mated = True
-
-            for piece, posMoves in checkMateMoves.items():
-                totalMoves += self.solveCheck(piece, posMoves, lordPiece, enemyMoves)
-        
-
-        else:  # else check the other side moves
-            for piece in self.activePices:
-                if not piece.isEnemy(lordPiece):
-                    if piece == lordPiece:
-                        totalMoves += len(piece.checkPossibleMove(self.grid, avoidMoves=enemyMoves))
-                    else:
-                        totalMoves += len(piece.checkPossibleMove(self.grid))
-        
-        return totalMoves
-
-    def solveCheck(self, piece, posMoves, lordPiece, enemyMoves):
-        '''
-        Find possible move if the lord is checked
-
-        Parameters:
-        piece: the piece that currently checking
-        posMoves: all the moves the the cheking piece could go
-        lordPiece: the checked piece
-        '''
-        totalMoves = 0
-        lordPos = tuple(lordPiece.position)
-        piecePos = tuple(piece.position)
-
-        ourPieces = [piece for piece in self.activePices if not piece.isEnemy(lordPiece)]
-
-        solveMoves = [piecePos, ]  # Capture the checking piece
-        avoidMoves = [*enemyMoves]  # Moves lord need to avoid
-        blockingMoves = []  # Moves that can block the attack
-
-        # Block the checking piece
-        if isinstance(piece, Chariot):
-            print("Charior is checking")
-            # Check if the chariot in the same row as the lord
-            if piecePos[0] == lordPos[0]:
-                if piecePos[1] < lordPos[1]:
-                    blockingMoves = [ pos for pos in posMoves if pos[0] == lordPos[0] and pos != lordPos and piecePos[1] < pos[1] < lordPos[1] ]
-                else:
-                    blockingMoves = [ pos for pos in posMoves if pos[0] == lordPos[0] and pos != lordPos and lordPos[1] < pos[1] < piecePos[1] ]
-
-                # Check if the lord can capture that chariot, if not, move away from the row
-                if (lordPos[0], lordPos[1] + 1) != piecePos:
-                    avoidMoves.append((lordPos[0], lordPos[1] + 1))
-                if (lordPos[0], lordPos[1] - 1) != piecePos:
-                    avoidMoves.append((lordPos[0], lordPos[1] - 1))
-
-            # Did the same for column
-            elif piecePos[1] == lordPos[1]:
-                if piecePos[0] < lordPos[0]:
-                    blockingMoves = [ pos for pos in posMoves if pos[1] == lordPos[1] and pos != lordPos and piecePos[0] < pos[0] < lordPos[0] ]
-                else:
-                    blockingMoves = [ pos for pos in posMoves if pos[1] == lordPos[1] and pos != lordPos and lordPos[0] < pos[0] < piecePos[0] ]
-
-                if (lordPos[0] + 1, lordPos[1]) != piecePos:
-                    avoidMoves.append((lordPos[0] + 1, lordPos[1]))
-                if (lordPos[0] - 1, lordPos[1]) != piecePos:
-                    avoidMoves.append((lordPos[0] - 1, lordPos[1]))
-            
-        elif isinstance(piece, Horse):
-            print("Horse is checking")
-            # Checking for which directions that the horse is attacking from
-            if piecePos[0] - 2 == lordPos[0]:  # attack from below
-                blockingMoves.append((piecePos[0] - 1, piecePos[1]))
-            elif piecePos[0] + 2 == lordPos[0]:  # attack from above
-                blockingMoves.append((piecePos[0] + 1, piecePos[1]))
-            elif piecePos[1] - 2 == lordPos[1]:  # attack from the right
-                blockingMoves.append((piecePos[0], piecePos[1] - 1))
-            elif piecePos[1] + 2 == lordPos[1]:  # attack from the left
-                blockingMoves.append((piecePos[0], piecePos[1] + 1))
-        
-        solveMoves += blockingMoves
-
-        for piece in ourPieces:
-            if piece == lordPiece:
-                totalMoves += len(piece.checkPossibleMove(self.grid, avoidMoves=avoidMoves))
-            else:
-                totalMoves += len(piece.checkPossibleMove(self.grid, forceMoves=solveMoves))
-                
-        return totalMoves
-    
-    def test(self):
-        for piece in self.activePices:
-            piece.checkPossibleMove(self.grid)
-        
+     

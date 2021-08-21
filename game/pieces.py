@@ -16,6 +16,7 @@ class ChessPiece:
         self.centrePoint = centrePoint
         self.radius = 20
 
+        self.attackingPiece = False
         self.side = side
         self.status = self.NOT_SELECTED
         self.possibleMoves = []
@@ -93,12 +94,23 @@ class ChessPiece:
         '''
         print("This is not a real chesspiece")
 
+    def checkForAttackAbility(self):
+        '''
+        Depends on the piece's position, determine whether they are a threat to the other lord or not
+        '''
+        return None
+
     def moveToNewSpot(self, centrePoint=None, position=None):
+        '''
+        Change the piece attribute according to the new spot
+        '''
         if not centrePoint:
             return
 
         self.centrePoint = centrePoint
         self.position = position
+
+        self.checkForAttackAbility()
 
     def getSide(self):
         return self.side
@@ -130,6 +142,8 @@ class Chariot(ChessPiece):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        self.attackingPiece = True
 
     def checkPossibleMove(self, boardGrid, update=True):
         boardGrid = np.array(boardGrid)
@@ -196,6 +210,7 @@ class Cannon(ChessPiece):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.attackingPiece = True
 
     def checkPossibleMove(self, boardGrid, update=True):
         boardGrid = np.array(boardGrid)
@@ -283,7 +298,6 @@ class Horse(ChessPiece):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # self.image = ChessImages.RED_HORSE if self.side == RED_SIDE else ChessImages.BLUE_HORSE
 
     def checkPossibleMove(self, boardGrid, update=True):
         boardGrid = np.array(boardGrid)
@@ -339,9 +353,15 @@ class Horse(ChessPiece):
         if update:
             self.possibleMoves = movables
 
-        # print(f"Done cheking move from Horse side {self.side}\n")
-        # pprint(boardGrid)
         return movables
+    
+    def checkForAttackAbility(self):
+        if self.side == BLUE_SIDE and self.position[0] > 4:
+            self.attackingPiece = True
+        
+        if self.side == RED_SIDE and self.position[0] < 5:
+            self.attackingPiece = True
+
 
 
 class Elephant(ChessPiece):
@@ -444,8 +464,14 @@ class Soldier(ChessPiece):
         if self.direction == 1 and rowPos > self.riverLine:
             self.goSideWay = True
 
+            if rowPos > self.riverLine + 1:
+                self.attackingPiece = True
+
         if self.direction == -1 and rowPos < self.riverLine:
             self.goSideWay = True
+
+            if rowPos < self.riverLine - 1:
+                self.attackingPiece = True
         
         # Move up
         newRow = rowPos + self.direction
@@ -465,6 +491,8 @@ class Soldier(ChessPiece):
             self.possibleMoves = movables
         
         return movables
+
+        
     
 
 class Lord(ChessPiece):

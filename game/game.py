@@ -4,7 +4,7 @@ from pprint import pprint
 
 from .utils import RED_TURN, BLUE_TURN
 from .board import BoardGame
-from .pieces import Chariot, Horse, Elephant, Lord
+from .pieces import Chariot, Horse, Elephant, Lord, Soldier
 
 
 class Game:
@@ -108,6 +108,8 @@ class Game:
         
         nextMoves = 0
 
+        totalPiecesCheck = 0
+
         for piece in piecesInTurn:
             moves = piece.checkPossibleMove(self.board.grid)
             validMoves = []
@@ -121,8 +123,12 @@ class Game:
 
                 enemyMoves = []
                 for p in tempBoard.activePices:
-                    if p.getSide() != self.turn:
+                    if p.getSide() != self.turn and p.attackingPiece:
                         enemyMoves += p.checkPossibleMove(tempBoard.grid)
+                        totalPiecesCheck += 1
+
+                        if isinstance(p, Horse):
+                            print(f"Yes {p}")
                 
                 if tuple(lordPiece.position) in enemyMoves or tempBoard.lordTolord():
                     continue
@@ -133,4 +139,5 @@ class Game:
             piece.possibleMoves = validMoves
         
 
+        print(f"Checked {totalPiecesCheck} pieces")
         return nextMoves

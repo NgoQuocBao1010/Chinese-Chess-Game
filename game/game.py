@@ -20,6 +20,7 @@ class Game:
         Initilize new board
         '''
         self.board = BoardGame()
+        self.tempBoard = self.board
         self.gameover = False
         self.turn = RED_TURN
         self.selectedPiece = None
@@ -35,6 +36,15 @@ class Game:
         '''
         self._init()
     
+    def undo(self):
+        '''
+        Undo a move
+        '''
+
+        if not self.isOver:
+            self.board = self.tempBoard
+            self.turn = self.board.turn
+
     def switchTurn(self):
         '''
         Switching side
@@ -78,6 +88,7 @@ class Game:
         Moving the piece
         '''
         if postion in self.board.movables:
+            self.tempBoard = deepcopy(self.board)
             self.board.movePiece(self.selectedPiece, postion)
             self.selectedPiece = None
             self.switchTurn()
@@ -99,7 +110,6 @@ class Game:
 
         lordPiece.mated = True if tuple(lordPiece.position) in enemyMoves else False
         
-    
     def calculateNextMoves(self):
         '''
         Calcalate the next moves for every piece
@@ -126,9 +136,6 @@ class Game:
                     if p.getSide() != self.turn and p.attackingPiece:
                         enemyMoves += p.checkPossibleMove(tempBoard.grid)
                         totalPiecesCheck += 1
-
-                        if isinstance(p, Horse):
-                            print(f"Yes {p}")
                 
                 if tuple(lordPiece.position) in enemyMoves or tempBoard.lordTolord():
                     continue
@@ -138,6 +145,4 @@ class Game:
             nextMoves += len(validMoves)
             piece.possibleMoves = validMoves
         
-
-        print(f"Checked {totalPiecesCheck} pieces")
         return nextMoves

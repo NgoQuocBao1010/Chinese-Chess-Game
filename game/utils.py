@@ -1,8 +1,10 @@
 import pygame
 
+pygame.font.init()
+
 # Width and height of the application
 WIN_WIDTH = 900
-WIN_HEIGHT = 600
+WIN_HEIGHT = 700
 
 # Red side, blue side indicator
 RED_SIDE = RED_TURN = 1
@@ -19,6 +21,13 @@ class Color:
     ORANGE = (255, 165, 0)
     GREY = (128, 128, 128)
     TURQUOISE = (64, 224, 208)
+
+
+class Font:
+    SCORE_TEXT_FONT = pygame.font.Font('./fonts/CursedTimerUlil-Aznm.ttf', 30)
+    SCORE_FONT = pygame.font.Font('./fonts/CursedTimerUlil-Aznm.ttf', 30, bold=True)
+    NORMAL_FONT = pygame.font.Font('./fonts/Poppins-Bold.ttf', 30)
+    WRITING_FONT = pygame.font.Font('./fonts/Allison-Regular.ttf', 30)
 
 
 class ChessImages:

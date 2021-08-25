@@ -183,11 +183,11 @@ class BoardGame:
     def calculatePostion(self):
         """
         Calculate the coordinate of the board
-        The board should be center horizontally and occupied 75% bottom half of the window
+        The board position will be center verically and occupied left side of the screen
         """
 
-        self.x = (WIN_WIDTH - self.width) / 2
-        self.y = WIN_HEIGHT * 5 / 100
+        self.x = 50
+        self.y = (WIN_HEIGHT -  self.height) / 2
 
     def getCoordinateFromPosition(self, position=None):
         """
@@ -281,6 +281,9 @@ class BoardGame:
         self.turn = RED_SIDE if self.turn == BLUE_SIDE else BLUE_SIDE
         
     def lordTolord(self):
+        '''
+        Check if 2 lords are directly look at each other, which is an invalid move
+        '''
         row1, col1 = self.redLord.getPosition()
         row2, col2 = self.blueLord.getPosition()
 

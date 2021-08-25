@@ -5,21 +5,20 @@ import pygame
 
 from game.utils import Color, RED_TURN, BLUE_TURN, WIN_HEIGHT, WIN_WIDTH
 from game.board import BoardGame
+from game.controlPanel import ControlPanel
 from game.game import Game
 
 # Window's Configuration
 WIN_WIDTH = WIN_WIDTH  # height and width of window
 WIN_HEIGHT = WIN_HEIGHT
 
-WIN = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGHT))  # initilize win form
+WIN = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGHT), pygame.RESIZABLE)  # initilize win form
 pygame.display.set_caption("LINE 98")  # win caption
 pygame.font.init()
 myfont = pygame.font.SysFont('Comic Sans MS', 15)
 
 
-
-
-def draw(game, turn):
+def draw(game, controlPanel):
     '''
     Drawing the game to window
     '''
@@ -32,6 +31,7 @@ def draw(game, turn):
 
     # textsurface = myfont.render(f'This is {turn} turn', False, Color.TURQUOISE)
     # WIN.blit(textsurface,(0,0))
+    controlPanel.draw(WIN)
     pygame.display.update()
 
 
@@ -41,13 +41,11 @@ def main():
     '''
 
     game = Game(WIN)
-
-    turn = "Red"
+    controlPanel = ControlPanel(game)
 
     run = True
-
     while run:
-        draw(game, turn)
+        draw(game, controlPanel)
         # Loop through all events in 1 frames
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -60,6 +58,8 @@ def main():
                     game.checkForMove(pos)
                 else:
                     print("Game is over")
+                
+                controlPanel.checkForClick(pos)
                 
 
 

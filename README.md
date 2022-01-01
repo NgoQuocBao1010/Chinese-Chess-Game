@@ -5,7 +5,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/NgoQuocBao1010/Chinese-Chess-Game">
-    <img src="images/screenshots/logo.jpg" alt="Logo" width="60%">
+    <img src="images/screenshots/logo.jpg" alt="Logo" width="200px">
   </a>
 
   <h3 align="center"> <strong>Chinese Chess Game</strong> </h3>

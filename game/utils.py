@@ -3,8 +3,8 @@ import pygame
 pygame.font.init()
 
 # Width and height of the application
-WIN_WIDTH = 900
-WIN_HEIGHT = 700
+WIN_WIDTH = 1200
+WIN_HEIGHT = 900
 
 # Red side, blue side indicator
 RED_SIDE = RED_TURN = 1

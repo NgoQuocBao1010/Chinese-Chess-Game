@@ -12,16 +12,14 @@ class BoardGame:
         self.rows = 9
         self.cols = 8
 
-        self.gap = 60
+        self.gap = WIN_WIDTH // 15
         self.border = 20
 
         self.width = self.cols * self.gap
         self.height = self.rows * self.gap
 
         # contains info of all postions in the board
-        self.grid = [
-            [None for _ in range(self.cols + 1)] for _ in range(self.rows + 1)
-        ]
+        self.grid = [[None for _ in range(self.cols + 1)] for _ in range(self.rows + 1)]
         # contains all active pieces all the board
         self.activePices = []
         # contains all movable positions
@@ -36,10 +34,10 @@ class BoardGame:
         self.makeGrid()
 
     def addNewPiece(self, type, position, side):
-        '''
+        """
         Add new piece to the board
         Help set up the board
-        '''
+        """
         chessTypes = {
             "chariot": Chariot,
             "cannon": Cannon,
@@ -51,7 +49,9 @@ class BoardGame:
         }
 
         centrePoint = self.getCoordinateFromPosition(position)
-        newPiece = chessTypes.get(type)(centrePoint=centrePoint, position=position, side=side)
+        newPiece = chessTypes.get(type)(
+            centrePoint=centrePoint, position=position, side=side
+        )
         self.activePices.append(newPiece)
 
         if isinstance(newPiece, Lord):
@@ -59,10 +59,10 @@ class BoardGame:
                 self.redLord = newPiece
             else:
                 self.blueLord = newPiece
-        
+
         row, col = position
         self.grid[row][col] = newPiece
-    
+
     def readPreset(self):
         directory = os.path.dirname(__file__)
         presetPath = os.path.join(directory, "presets/standard.cfg")
@@ -70,32 +70,30 @@ class BoardGame:
 
         with open(presetPath, "r") as f:
             lines = f.readlines()
-        
+
         result = []
         for line in lines:
             line = line[:-1]
-            
+
             piece, row, col, side = line.split(seperator)
-            
+
             row, col = int(row), int(col)
             position = (row, col)
-            
+
             side = RED_SIDE if side == "red" else BLUE_SIDE
 
             result.append((piece, position, side))
-        
-        return result
-        
-    def makeGrid(self):
-        '''
-        Set up all the pieces and their positions in the board at the beginning of the game
-        '''
-        pieces = self.readPreset()
 
+        return result
+
+    def makeGrid(self):
+        """
+        Set up all the pieces and their positions in the board at the beginning of the game
+        """
+        pieces = self.readPreset()
 
         for piece, position, side in pieces:
             self.addNewPiece(piece, position, side)
-
 
         # Check all possible move for all the pieces after initialize the board
         for piece in self.activePices:
@@ -151,7 +149,6 @@ class BoardGame:
         ]
         for point1, point2 in palaceCoors:
             pygame.draw.line(win, Color.GREY, point1, point2, 2)
-            
 
         # Draw the river
         pygame.draw.rect(
@@ -187,7 +184,7 @@ class BoardGame:
         """
 
         self.x = 50
-        self.y = (WIN_HEIGHT -  self.height) / 2
+        self.y = (WIN_HEIGHT - self.height) / 2
 
     def getCoordinateFromPosition(self, position=None):
         """
@@ -203,28 +200,28 @@ class BoardGame:
         return (x, y)
 
     def getPositionFromCoordinate(self, coordinate):
-        '''
+        """
         Get row and column from given game's coordinate
-        '''
+        """
         x, y = coordinate
         col = round((x - self.x) / self.gap)
         row = round((y - self.y) / self.gap)
 
-        return (row, col) 
+        return (row, col)
 
     def getPiece(self, position):
-        '''
+        """
         Get piece from given location
-        '''
+        """
         row, col = position
         return self.grid[row][col]
-    
+
     def getLord(self, side):
-        '''
+        """
         Return the lord piece depends on the given side
-        '''
+        """
         return self.redLord if side == RED_SIDE else self.blueLord
-    
+
     def isClicked(self, clickedPos=None):
         """
         Take mouse clicked positon as an argument
@@ -242,11 +239,11 @@ class BoardGame:
             return False
 
         return True
-    
+
     def deselectPiece(self, piecePos):
-        '''
+        """
         Deselect a piece
-        '''
+        """
         piece = self.getPiece(piecePos)
         piece.deselect()
         self.movables = []
@@ -279,11 +276,11 @@ class BoardGame:
 
         # Swich turn
         self.turn = RED_SIDE if self.turn == BLUE_SIDE else BLUE_SIDE
-        
+
     def lordTolord(self):
-        '''
+        """
         Check if 2 lords are directly look at each other, which is an invalid move
-        '''
+        """
         row1, col1 = self.redLord.getPosition()
         row2, col2 = self.blueLord.getPosition()
 
@@ -296,7 +293,7 @@ class BoardGame:
             for index in range(down + 1, up):
                 if column[index] is not None:
                     return False
-            
+
             return True
-        else:            
+        else:
             return False

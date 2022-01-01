@@ -17,7 +17,7 @@ WIN_HEIGHT = WIN_HEIGHT
 WIN = pygame.display.set_mode(
     (WIN_WIDTH, WIN_HEIGHT), pygame.RESIZABLE
 )  # initilize win form
-pygame.display.set_caption("LINE 98")  # win caption
+pygame.display.set_caption("Chinese Chess Game")  # win caption
 pygame.font.init()
 myfont = pygame.font.SysFont("Comic Sans MS", 15)
 

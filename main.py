@@ -4,6 +4,12 @@ from game.utils import Color, WIN_HEIGHT, WIN_WIDTH
 from game.controlPanel import ControlPanel
 from game.game import Game
 
+
+# Increase sharpness
+import ctypes
+
+ctypes.windll.shcore.SetProcessDpiAwareness(1)
+
 # Window's Configuration
 WIN_WIDTH = WIN_WIDTH  # height and width of window
 WIN_HEIGHT = WIN_HEIGHT
@@ -23,11 +29,6 @@ def draw(game, controlPanel):
     WIN.fill(Color.BLACK)
     game.updateGame()
 
-    # textsurface = myfont.render(f'{turn} has {movesLeft}', False, Color.RED)
-    # WIN.blit(textsurface,(0,40))
-
-    # textsurface = myfont.render(f'This is {turn} turn', False, Color.TURQUOISE)
-    # WIN.blit(textsurface,(0,0))
     controlPanel.draw(WIN)
     pygame.display.update()
 

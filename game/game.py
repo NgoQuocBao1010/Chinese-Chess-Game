@@ -4,7 +4,6 @@ from pprint import pprint
 
 from .utils import RED_TURN, BLUE_TURN
 from .board import BoardGame
-from .pieces import Chariot, Horse, Elephant, Lord, Soldier
 
 
 class Game:
@@ -94,7 +93,7 @@ class Game:
         """
         if postion in self.board.movables:
             self.tempBoard = deepcopy(self.board)
-            self.board.movePiece(self.selectedPiece, postion)
+            self.board.movePiece(self.selectedPiece.position, postion)
             self.selectedPiece = None
             self.switchTurn()
             self.checkForMated()
@@ -138,7 +137,7 @@ class Game:
                 tempBoard = deepcopy(self.board)
                 tempPiece = tempBoard.getPiece(piece.getPosition())
 
-                tempBoard.movePiece(tempPiece, move)
+                tempBoard.movePiece(tempPiece.position, move)
                 lordPiece = tempBoard.getLord(self.turn)
 
                 enemyMoves = []

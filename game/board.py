@@ -1,7 +1,6 @@
 import pygame
 import os
 import numpy as np
-from pprint import pprint
 
 from .pieces import Chariot, Cannon, Horse, Elephant, Soldier, Advisor, Lord
 from .utils import Color, RED_SIDE, BLUE_SIDE, WIN_HEIGHT, WIN_WIDTH
@@ -188,7 +187,8 @@ class BoardGame:
 
     def getCoordinateFromPosition(self, position=None):
         """
-        Get the centre coordinate of a chess piece by giving its row and column
+        Get the centre coordinate of a chess piece by giving its row and column,
+        Which means the corner of a square from the board
         """
         if not position:
             return None
@@ -250,29 +250,30 @@ class BoardGame:
 
         return None
 
-    def movePiece(self, piece, newPos=(0, 0)):
+    def movePiece(self, oldPos, newPos=(0, 0)):
         """
         Moving the piece and update the board
         """
 
-        # print(f"Moving {piece} to {newPos}")
-
         lordPiece = self.getLord(side=self.turn)
         lordPiece.mated = False
 
-        oldRow, oldCol = piece.position
+        oldRow, oldCol = oldPos
         newRow, newCol = newPos
 
-        self.deselectPiece(piece.position)
+        self.deselectPiece(oldPos)
 
+        # Capture a piece if there is one in a new pos
         if self.grid[newRow][newCol]:
             self.activePices.remove(self.grid[newRow][newCol])
 
+        # Swap piece's position to new position
+        movingPiece = self.grid[oldRow][oldCol]
         self.grid[oldRow][oldCol] = None
-        self.grid[newRow][newCol] = piece
+        self.grid[newRow][newCol] = movingPiece
 
         newCentrePoint = self.getCoordinateFromPosition(newPos)
-        piece.moveToNewSpot(centrePoint=newCentrePoint, position=newPos)
+        movingPiece.moveToNewSpot(centrePoint=newCentrePoint, position=newPos)
 
         # Swich turn
         self.turn = RED_SIDE if self.turn == BLUE_SIDE else BLUE_SIDE

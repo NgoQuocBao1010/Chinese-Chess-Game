@@ -1,4 +1,3 @@
-import pygame
 from copy import deepcopy
 from pprint import pprint
 
@@ -41,6 +40,7 @@ class Game:
         """
 
         if not self.isOver:
+            self.board.deselectPiece(self.selectedPiece.position)
             self.board = self.tempBoard
             self.turn = self.board.turn
 
@@ -82,7 +82,7 @@ class Game:
                         self.selectedPiece = None
                         self.checkForMove(clickedPos)
 
-        else:  # If other the board is not clicked, diselect any selected piece
+        else:  # If something else other than the board is not clicked, diselect any selected piece
             if self.selectedPiece is not None:
                 self.board.deselectPiece(self.selectedPiece.getPosition())
                 self.selectedPiece = None
@@ -90,6 +90,7 @@ class Game:
     def move(self, postion):
         """
         Moving the piece
+        position: args tuple
         """
         if postion in self.board.movables:
             self.tempBoard = deepcopy(self.board)

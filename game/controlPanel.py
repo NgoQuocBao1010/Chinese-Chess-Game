@@ -20,6 +20,8 @@ class ControlPanel:
         self.makeIndicators()
         self.makeButton(self.x, self.y + 200, "Undo")
         self.makeButton(self.x + self.width - 100, self.y + 200, "Reset")
+        self.makeButton(self.x, self.y + 300, "New Room")
+        self.makeButton(self.x + self.width - 100, self.y + 300, "Join Room")
 
     def makeIndicators(self):
         """
@@ -35,6 +37,11 @@ class ControlPanel:
         ]
 
     def makeButton(self, x, y, text):
+        """
+        Make sure every button is the same size
+        W = 100
+        H = 30
+        """
         width = 100
         height = 30
         coordinate = (x, y)
@@ -42,11 +49,15 @@ class ControlPanel:
         self.buttons.append((coordinate, width, height, text))
 
     def runCommand(self, buttonText):
-        if buttonText == "Undo":
-            self.game.undo()
+        # if buttonText == "Undo":
+        #     self.game.undo()
 
-        elif buttonText == "Reset":
-            self.game.resetGame()
+        # elif buttonText == "Reset":
+        #     self.game.resetGame()
+
+        FUNCTIONS = {"Undo": self.game.undo, "Reset": self.game.resetGame}
+
+        FUNCTIONS[buttonText]()
 
     def checkForClick(self, clickPos):
         """
